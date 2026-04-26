@@ -5,13 +5,54 @@
 
 个人Chrome扩展程序合集，包含各类提升浏览效率、解决日常浏览痛点的小工具。所有扩展均基于Chrome Extension v3开发，代码简洁，无冗余功能。
 
+## 目录
+
+- [bookmark-navigator](#bookmark-navigator) - 收藏夹分类导航
+- [extension-1](#extension-1) - 插件模板
+- [extension-2](#extension-2) - 插件模板
+
+---
+
 ## 已包含插件
 
-| 插件名称 | 功能简介 | 状态 |
-|----------|----------|------|
-| bookmark-navigator | Chrome新标签页显示收藏夹分类导航，含搜索、排序、拖拽排版 | 可用 |
-| extension-1 | 插件模板（待开发） | 待开发 |
-| extension-2 | 插件模板（待开发） | 待开发 |
+### bookmark-navigator
+
+Chrome 新标签页收藏夹导航插件，解决收藏夹过多难以查找的问题。
+
+**功能特性：**
+- 分类展示收藏夹内容（使用 Chrome 文件夹结构）
+- 搜索功能 - 按标题/URL 快速查找
+- 排序功能 - 按名称或添加时间排序
+- 拖拽排版 - 自由调整分类卡片顺序
+- 折叠/展开 - 每个分类默认显示 8 个链接
+- 重载按钮 - 一键刷新收藏夹数据
+- 现代深色主题 UI（TailwindCSS）
+
+**技术栈：** Chrome Extension v3 + TailwindCSS（本地编译）
+
+**状态：** 可用
+
+**目录：** `bookmark-navigator/`
+
+---
+
+### extension-1
+
+插件开发模板，基于 Chrome Extension v3。
+
+**状态：** 待开发
+
+**目录：** `extension-1/`
+
+---
+
+### extension-2
+
+插件开发模板，基于 Chrome Extension v3。
+
+**状态：** 待开发
+
+**目录：** `extension-2/`
 
 ## 安装方法
 
