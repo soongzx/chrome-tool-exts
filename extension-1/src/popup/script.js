@@ -1,0 +1,1 @@
+console.log('extension-1 popup script loaded');
