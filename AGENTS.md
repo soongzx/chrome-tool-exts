@@ -21,3 +21,14 @@ Chrome Extension v3 项目，每个插件独立目录。
 - manifest 统一使用 Chrome Extension v3
 - 仅申请必要权限
 - 代码简洁，专注单一功能
+
+## Git 提交规则
+
+**所有提交必须使用 `main` 分支，禁止创建其他分支进行提交。**
+
+提交流程：
+1. 直接在 `main` 分支上进行开发
+2. 完成后直接提交到 `main` 分支
+3. 推送到远程：`git push origin main`
+
+如需临时保存进度，使用 git stash 而不是创建新分支。
