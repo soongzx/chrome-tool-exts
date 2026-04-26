@@ -122,16 +122,17 @@ function handleSort(e) {
   renderBookmarks(sorted);
 }
 
-async function handleReload() {
+function handleReload() {
   showLoading(true);
   
   chrome.runtime.sendMessage({ action: 'reloadBookmarks' }, (response) => {
+    showLoading(false);
+    
     if (response && response.bookmarks) {
       bookmarksData = response.bookmarks;
       renderBookmarks(bookmarksData);
       updateLastUpdateTime(response.lastUpdate);
     }
-    showLoading(false);
   });
 }
 
@@ -157,6 +158,7 @@ function renderBookmarks(data) {
   container.innerHTML = data.map(folder => createFolderCard(folder)).join('');
   
   attachDragListeners();
+  attachExpandListeners();
 }
 
 function createFolderCard(folder) {
@@ -166,19 +168,19 @@ function createFolderCard(folder) {
   const hasMore = hiddenItems.length > 0;
   
   return `
-    <div class="bookmark-card" data-folder-id="${folder.id}" draggable="true">
+    <div class="bookmark-card" data-folder-id="${folder.id}">
       <div class="category-header">
-        <h3 class="text-lg font-semibold text-primary-300 truncate">${escapeHtml(folder.title)}</h3>
-        <span class="text-xs text-slate-500">${items.length}</span>
+        <h3 class="category-title" title="${escapeHtml(folder.title)}">${escapeHtml(folder.title)}</h3>
+        <span class="category-count">${items.length}</span>
       </div>
-      <div class="bookmark-list space-y-1">
+      <div class="bookmark-list">
         ${visibleItems.map(item => createBookmarkItem(item)).join('')}
       </div>
       ${hasMore ? `
-        <button class="expand-btn mt-3 w-full" data-folder="${folder.id}" data-expanded="false">
+        <button class="expand-btn" data-folder="${folder.id}" data-expanded="false">
           展开更多 (+${hiddenItems.length})
         </button>
-        <div class="hidden bookmark-list space-y-1 mt-2" id="expanded-${folder.id}">
+        <div class="bookmark-list hidden" id="expanded-${folder.id}">
           ${hiddenItems.map(item => createBookmarkItem(item)).join('')}
         </div>
       ` : ''}
@@ -187,25 +189,15 @@ function createFolderCard(folder) {
 }
 
 function createBookmarkItem(item) {
-  const favicon = getFaviconUrl(item.url);
   const domain = extractDomain(item.url);
   
   return `
-    <a href="${escapeHtml(item.url)}" class="bookmark-item" target="_blank" title="${escapeHtml(item.url)}">
-      <img src="${favicon}" class="w-5 h-5 rounded" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%2394a3b8%22><path d=%22M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z%22/></svg>'">
-      <span class="truncate flex-1">${escapeHtml(item.title || domain)}</span>
-      <span class="text-xs text-slate-500 hidden sm:inline">${domain}</span>
+    <a href="${escapeHtml(item.url)}" class="bookmark-item" target="_blank" title="${escapeHtml(item.title || item.url)}">
+      <img class="favicon" src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%236b7280%22><rect width=%2224%22 height=%2224%22 rx=%224%22/></svg>'">
+      <span class="title">${escapeHtml(item.title || domain)}</span>
+      <span class="domain">${domain}</span>
     </a>
   `;
-}
-
-function getFaviconUrl(url) {
-  try {
-    const domain = new URL(url).hostname;
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
-  } catch {
-    return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2394a3b8"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>';
-  }
 }
 
 function extractDomain(url) {
@@ -222,15 +214,18 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-function attachDragListeners() {
+function attachExpandListeners() {
   document.querySelectorAll('.expand-btn').forEach(btn => {
     btn.addEventListener('click', handleExpand);
   });
-  
+}
+
+function attachDragListeners() {
   const cards = document.querySelectorAll('.bookmark-card');
   const container = document.getElementById('bookmarksContainer');
   
   cards.forEach(card => {
+    card.setAttribute('draggable', 'true');
     card.addEventListener('dragstart', handleDragStart);
     card.addEventListener('dragend', handleDragEnd);
     card.addEventListener('dragover', handleDragOver);
@@ -249,7 +244,7 @@ function handleExpand(e) {
   
   if (expanded) {
     expandedDiv.classList.add('hidden');
-    btn.textContent = `展开更多 (+${btn.dataset.hiddenCount})`;
+    btn.textContent = `展开更多 (+${btn.dataset.extra || '0'})`.replace('展开更多 (+undefined)', '展开更多');
     btn.dataset.expanded = 'false';
   } else {
     expandedDiv.classList.remove('hidden');
@@ -259,14 +254,16 @@ function handleExpand(e) {
 }
 
 function handleDragStart(e) {
-  draggedItem = e.target;
-  e.target.classList.add('dragging');
+  draggedItem = e.target.closest('.bookmark-card');
+  draggedItem.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
 }
 
 function handleDragEnd(e) {
-  e.target.classList.remove('dragging');
-  draggedItem = null;
+  if (draggedItem) {
+    draggedItem.classList.remove('dragging');
+    draggedItem = null;
+  }
 }
 
 function handleDragOver(e) {
@@ -289,11 +286,25 @@ function handleContainerDrop(e) {
 }
 
 function showLoading(show) {
-  document.getElementById('loading').classList.toggle('hidden', !show);
+  const el = document.getElementById('loading');
+  if (show) {
+    el.classList.remove('hidden');
+    el.classList.add('show');
+  } else {
+    el.classList.add('hidden');
+    el.classList.remove('show');
+  }
 }
 
 function showEmpty(show) {
-  document.getElementById('empty').classList.toggle('hidden', !show);
+  const el = document.getElementById('empty');
+  if (show) {
+    el.classList.remove('hidden');
+    el.classList.add('show');
+  } else {
+    el.classList.add('hidden');
+    el.classList.remove('show');
+  }
 }
 
 function debounce(func, wait) {
