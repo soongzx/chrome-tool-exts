@@ -1,49 +1,63 @@
 // Background service worker for Bookmark Navigator
 
 function processBookmarksTree(nodes) {
+  if (!nodes || !nodes.length) return [];
+  
+  const root = nodes[0];
+  if (!root.children) return [];
+  
   const result = [];
   
-  function traverse(node) {
-    if (node.children) {
-      if (node.id !== '1' && node.id !== '0') {
-        const folder = {
-          id: node.id,
-          title: node.title || '未命名文件夹',
-          children: [],
-          expanded: true
-        };
-        
-        node.children.forEach(child => {
-          if (child.url) {
-            folder.children.push({
-              id: child.id,
-              title: child.title,
-              url: child.url,
-              dateAdded: child.dateAdded
-            });
-          } else if (child.children) {
-            const subFolder = traverse(child);
-            if (subFolder.children.length > 0 || subFolder.id === 'toolbar_____') {
-              folder.children.push(subFolder);
-            }
-          }
-        });
-        
-        return folder;
-      } else {
-        node.children.forEach(child => {
-          const processed = traverse(child);
-          if (processed) {
-            result.push(processed);
-          }
-        });
+  root.children.forEach(child => {
+    if (child.id === '1' || child.id === '0') {
+      child.children.forEach(subChild => {
+        const processed = processNode(subChild);
+        if (processed) {
+          result.push(processed);
+        }
+      });
+    } else {
+      const processed = processNode(child);
+      if (processed) {
+        result.push(processed);
       }
     }
+  });
+  
+  return result;
+}
+
+function processNode(node) {
+  if (node.url) {
     return null;
   }
   
-  traverse(nodes);
-  return result;
+  const folder = {
+    id: node.id,
+    title: node.title || '未命名文件夹',
+    children: [],
+    expanded: true
+  };
+  
+  if (node.children) {
+    node.children.forEach(child => {
+      if (child.url) {
+        folder.children.push({
+          id: child.id,
+          title: child.title,
+          url: child.url,
+          dateAdded: child.dateAdded
+        });
+      } else if (child.children) {
+        const subFolder = processNode(child);
+        if (subFolder && subFolder.children.length > 0) {
+          folder.children.push(subFolder);
+        }
+      }
+    });
+  }
+  
+  return folder;
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
