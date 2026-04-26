@@ -7,13 +7,19 @@ document.addEventListener('DOMContentLoaded', init);
 async function init() {
   showLoading(true);
   
-  const result = await chrome.storage.local.get(['bookmarksData', 'lastUpdate']);
-  
-  if (result.bookmarksData) {
-    bookmarksData = result.bookmarksData;
-    renderBookmarks(bookmarksData);
-    updateLastUpdateTime(result.lastUpdate);
-  } else {
+  try {
+    const result = await chrome.storage.local.get(['bookmarksData', 'lastUpdate']);
+    
+    if (result.bookmarksData && result.bookmarksData.length > 0) {
+      bookmarksData = result.bookmarksData;
+      renderBookmarks(bookmarksData);
+      updateLastUpdateTime(result.lastUpdate);
+      showLoading(false);
+    } else {
+      loadBookmarksFromBackground();
+    }
+  } catch (error) {
+    console.error('Init error:', error);
     loadBookmarksFromBackground();
   }
   
@@ -21,15 +27,22 @@ async function init() {
 }
 
 function loadBookmarksFromBackground() {
+  const timeoutId = setTimeout(() => {
+    showLoading(false);
+    showEmpty(true);
+  }, 10000);
+  
   chrome.runtime.sendMessage({ action: 'getBookmarks' }, (response) => {
-    if (response && response.bookmarks) {
+    clearTimeout(timeoutId);
+    showLoading(false);
+    
+    if (response && response.bookmarks && response.bookmarks.length > 0) {
       bookmarksData = response.bookmarks;
       chrome.storage.local.set({ bookmarksData: bookmarksData, lastUpdate: Date.now() });
       renderBookmarks(bookmarksData);
     } else {
       showEmpty(true);
     }
-    showLoading(false);
   });
 }
 

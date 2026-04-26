@@ -1,22 +1,4 @@
 // Background service worker for Bookmark Navigator
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'getBookmarks') {
-    chrome.bookmarks.getTree((tree) => {
-      const bookmarks = processBookmarksTree(tree);
-      sendResponse({ bookmarks });
-    });
-    return true;
-  }
-  
-  if (request.action === 'reloadBookmarks') {
-    chrome.bookmarks.getTree((tree) => {
-      const bookmarks = processBookmarksTree(tree);
-      chrome.storage.local.set({ bookmarksData: bookmarks, lastUpdate: Date.now() });
-      sendResponse({ bookmarks, lastUpdate: Date.now() });
-    });
-    return true;
-  }
-});
 
 function processBookmarksTree(nodes) {
   const result = [];
@@ -64,9 +46,33 @@ function processBookmarksTree(nodes) {
   return result;
 }
 
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'getBookmarks') {
+    chrome.bookmarks.getTree((tree) => {
+      const bookmarks = processBookmarksTree(tree);
+      sendResponse({ bookmarks });
+    });
+    return true;
+  }
+  
+  if (request.action === 'reloadBookmarks') {
+    chrome.bookmarks.getTree((tree) => {
+      const bookmarks = processBookmarksTree(tree);
+      chrome.storage.local.set({ bookmarksData: bookmarks, lastUpdate: Date.now() });
+      sendResponse({ bookmarks, lastUpdate: Date.now() });
+    });
+    return true;
+  }
+});
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.bookmarks.getTree((tree) => {
     const bookmarks = processBookmarksTree(tree);
     chrome.storage.local.set({ bookmarksData: bookmarks, lastUpdate: Date.now() });
   });
+});
+
+chrome.bookmarks.getTree((tree) => {
+  const bookmarks = processBookmarksTree(tree);
+  chrome.storage.local.set({ bookmarksData: bookmarks, lastUpdate: Date.now() });
 });
