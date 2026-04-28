@@ -1,11 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Bookmark Navigator",
-  "version": "1.0.2",
-  "description": "分类展示收藏夹的导航页面，在Chrome新建标签页显示",
+  "version": "1.0.3",
+  "description": "独立弹窗书签管理器，支持树状展示、搜索、主题和基础维护工具",
   "permissions": [
     "bookmarks",
-    "storage"
+    "storage",
+    "activeTab",
+    "favicon"
   ],
   "host_permissions": [],
   "background": {

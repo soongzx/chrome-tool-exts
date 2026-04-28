@@ -1,6 +1,6 @@
 {
   "name": "bookmark-navigator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Bookmark Navigator - Chrome new tab page with categorized bookmarks",
   "scripts": {
     "build:css": "npx tailwindcss -i ./src/styles.css -o ./src/styles.css --minify",

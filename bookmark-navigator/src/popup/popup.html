@@ -7,17 +7,104 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="popup-container">
-    <h1>Bookmark Navigator</h1>
-    <p class="subtitle">收藏夹分类导航</p>
-    <button id="reloadBtn" class="reload-btn">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-      </svg>
-      重载收藏夹
-    </button>
-    <div id="status" class="status"></div>
+  <div class="popup-shell">
+    <header class="toolbar">
+      <div>
+        <h1>书签管理器</h1>
+        <p id="summaryText">正在加载书签...</p>
+      </div>
+      <div class="toolbar-actions">
+        <button id="themeBtn" class="icon-btn" title="切换主题">主题</button>
+        <button id="settingsBtn" class="icon-btn" title="设置">设置</button>
+        <button id="reloadBtn" class="icon-btn" title="重载">重载</button>
+      </div>
+    </header>
+
+    <section class="search-panel">
+      <input id="searchInput" type="search" placeholder="搜索标题或 URL，Ctrl/⌘+F 聚焦">
+      <select id="sortSelect" title="排序方式">
+        <option value="manual">手动排序</option>
+        <option value="name">按名称</option>
+        <option value="date">按创建时间</option>
+      </select>
+    </section>
+
+    <main id="content" class="content">
+      <div id="loading" class="state">正在加载...</div>
+      <div id="empty" class="state hidden">没有找到匹配的书签</div>
+      <div id="treeRoot" class="tree-root"></div>
+      <div id="searchResults" class="search-results hidden"></div>
+    </main>
+
+    <footer class="statusbar">
+      <span id="selectionText">未选择</span>
+      <div class="footer-actions">
+        <button id="addFolderBtn" class="text-btn">新建文件夹</button>
+        <button id="addBookmarkBtn" class="text-btn">添加书签</button>
+      </div>
+    </footer>
   </div>
+
+  <aside id="settingsPanel" class="settings-panel hidden" aria-hidden="true">
+    <div class="settings-card">
+      <div class="settings-header">
+        <h2>设置</h2>
+        <button id="closeSettingsBtn" class="icon-btn">关闭</button>
+      </div>
+      <label>
+        默认打开方式
+        <select id="openModeSelect">
+          <option value="newTab">新标签页</option>
+          <option value="currentTab">当前标签页</option>
+        </select>
+      </label>
+      <label>
+        默认展开层级
+        <select id="expandDepthSelect">
+          <option value="1">1 级</option>
+          <option value="2">2 级</option>
+          <option value="99">全部展开</option>
+        </select>
+      </label>
+      <label class="checkbox-row">
+        <input id="compactToggle" type="checkbox">
+        紧凑视图
+      </label>
+      <label>
+        颜色主题
+        <select id="themeSelect">
+          <option value="dark">深色模式</option>
+          <option value="light">浅色模式</option>
+          <option value="contrast">高对比度</option>
+        </select>
+      </label>
+      <div class="cleanup-box">
+        <strong>图标清理工具</strong>
+        <p>Chrome 书签 API 不开放 favicon 存储字段，无法直接删除内部 favicon 缓存。此工具会检测并提示书签 URL 中可见的 data:image Base64 数据，绝不删除书签本身。</p>
+        <button id="cleanupBtn" class="danger-btn">清除 Base64 图标数据</button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="contextMenu" class="context-menu hidden">
+    <button data-action="open-new-window">新窗口打开</button>
+    <button data-action="open-incognito">隐身窗口打开</button>
+    <button data-action="edit">编辑</button>
+    <button data-action="delete">删除</button>
+  </div>
+
+  <template id="dialogTemplate">
+    <div class="dialog-backdrop">
+      <form class="dialog-card">
+        <h2></h2>
+        <div class="dialog-body"></div>
+        <div class="dialog-actions">
+          <button type="button" class="text-btn cancel-btn">取消</button>
+          <button type="submit" class="primary-btn">确认</button>
+        </div>
+      </form>
+    </div>
+  </template>
   <script src="popup.js"></script>
 </body>
 </html>
